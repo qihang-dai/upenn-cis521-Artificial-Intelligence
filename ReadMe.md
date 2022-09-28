@@ -1,7 +1,5 @@
 # Hello there
 
-I want to keep record of my homework about this concise code i created together with github copilot.
+I want to keep record of my homework about this concise code i created together with github copilot. And practice git or something else.
 
-and practice git or something else.
-
-its becomes satisfying to be tech.
+Its becomes satisfying to be techy.
