@@ -2,8 +2,6 @@
 # CIS 521: Informed Search Homework
 ############################################################
 
-from queue import PriorityQueue
-
 student_name = "Type your full name here."
 
 ############################################################
@@ -11,8 +9,9 @@ student_name = "Type your full name here."
 ############################################################
 
 # Include your imports here, if any are used.
+from queue import PriorityQueue
 import random
-import heapq
+import math
 
 
 ############################################################
@@ -139,32 +138,94 @@ class TilePuzzle(object):
                 if next.as_tuple() not in explored:
                     frontier.put((next.manhattan_distance() + g + 1, g + 1, moves + [move], next))
 
-
-
-
-                     
-
-
-                    
-            
-
-TP = create_tile_puzzle(3, 3)
-TP.perform_move('up')
-TP.perform_move('down')
-TP.perform_move('left')
-TP.perform_move('right')
-
-
-
-
-
-
 ############################################################
 # Section 2: Grid Navigation
 ############################################################
 
+class GridNavigation(object):
+    
+    # Required
+    def __init__(self, scene, start, goal):
+        self.scene = scene 
+        self.rows = len(scene)
+        self.cols = len(scene[0])
+        self.start = start
+        self.row = start[0]
+        self.col = start[1]
+        self.goal = goal
+        
+    
+    def perform_move(self, direction):
+        if direction == 'up' and self.row > 0 and self.scene[self.row - 1][self.col] is False:
+            self.row -= 1
+        elif direction == 'down' and self.row < self.rows - 1 and self.scene[self.row + 1][self.col] is False:
+            self.row += 1
+        elif direction == 'left' and self.col > 0 and self.scene[self.row][self.col - 1] is False:
+            self.col -= 1
+        elif direction == 'right' and self.col < self.cols - 1 and self.scene[self.row][self.col + 1] is False:
+            self.col += 1
+        elif direction == 'up-left' and self.row > 0 and self.col > 0 and self.scene[self.row - 1][self.col - 1] is False:
+            self.row -= 1
+            self.col -= 1
+        elif direction == 'up-right' and self.row > 0 and self.col < self.cols - 1 and self.scene[self.row - 1][self.col + 1] is False:
+            self.row -= 1
+            self.col += 1
+        elif direction == 'down-left' and self.row < self.rows - 1 and self.col > 0 and self.scene[self.row + 1][self.col - 1] is False:
+            self.row += 1
+            self.col -= 1
+        elif direction == 'down-right' and self.row < self.rows - 1 and self.col < self.cols - 1 and self.scene[self.row + 1][self.col + 1] is False:
+            self.row += 1
+            self.col += 1
+        else:
+            return False
+        return True
+    
+    def is_solved(self):
+        return (self.row, self.col) == self.goal
+    
+    def copy(self):
+        return GridNavigation(self.scene, (self.row, self.col), self.goal)
+    
+    def successors(self):
+        for move in ['up', 'down', 'left', 'right', 'up-left', 'up-right', 'down-left', 'down-right']:
+            newBoard = self.copy()
+            if newBoard.perform_move(move):
+                yield (move, (newBoard.row, newBoard.col), newBoard)
+    
+    def heruistic(self):
+        return math.sqrt((self.row - self.goal[0]) ** 2 + (self.col - self.goal[1]) ** 2)
+
+    # Required
+    def find_path_a_star(self):
+        frontier = PriorityQueue()
+        index = 0
+        frontier.put((self.heruistic(), 0, index, [self.start], self))
+        explored = set()
+        while frontier:
+            _, g, _, position, board = frontier.get() #index to help get rid out priority queue comparing problem, '<' not supported between instances of 'GridNavigation' and 'GridNavigation'
+            if (board.row, board.col) in explored:
+                continue
+            explored.add((board.row, board.col))
+            if board.is_solved():
+                print(position)
+                return position
+            for move, pos, next in board.successors():
+                if (next.row, next.col) not in explored:
+                    index += 1
+                    distance = g + 1
+                    if move in ['up-left', 'up-right', 'down-left', 'down-right']:
+                        distance = g + math.sqrt(2)
+                    frontier.put((distance + next.heruistic(), distance, index, position + [pos], next))
+
 def find_path(start, goal, scene):
-    pass
+    board = GridNavigation(scene, start, goal)
+    
+    return board.find_path_a_star()
+
+# scene = [[False, False, False],
+#           [False, True , False],
+#          [False, False, False]]
+# find_path((0, 0), (2, 1), scene)
 
 ############################################################
 # Section 3: Linear Disk Movement, Revisited

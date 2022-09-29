@@ -144,7 +144,7 @@ def load_scene(scene_path):
 if __name__ == "__main__":
     root = tkinter.Tk()
     root.title("Grid Navigation")
-    scene = load_scene(sys.argv[1])
+    scene = load_scene("scene_simple.txt")
     if scene is not None:
         GridNavigationGUI(root, scene).pack()
         root.resizable(height=False, width=False)
