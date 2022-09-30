@@ -230,25 +230,79 @@ def find_path(start, goal, scene):
 ############################################################
 # Section 3: Linear Disk Movement, Revisited
 ############################################################
+def successors(A):
+    for i in range(len(A)):
+        val = A[i]
+        if val >= 0:
+            if i + 1 < len(A) and A[i + 1] == -1:
+                tmpA = list(A)
+                tmpA[i] = -1
+                tmpA[i + 1] = val
+                move = (i, i + 1)
+                newState = tuple(tmpA)
+                yield  move, newState
+            elif(i < len(A) - 2 and A[i + 1] >= 0 and A[i + 2] == -1):
+                tmpA = list(A)
+                tmpA[i] = -1
+                tmpA[i + 2] = val
+                move = (i, i + 2)
+                newState = tuple(tmpA)
+                yield  move, newState
+            elif(i > 0 and A[i - 1] == -1):
+                tmpA = list(A)
+                tmpA[i] = -1
+                tmpA[i - 1] = val
+                move = (i, i - 1)
+                newState = tuple(tmpA)
+                yield  move, newState
+            elif(i > 1 and A[i - 2] >= 0 and A[i - 2] == -1):
+                tmpA = list(A)
+                tmpA[i] = -1
+                tmpA[i - 2] = val
+                move = (i, i - 2)
+                newState = tuple(tmpA)
+                yield  move, newState
+
+def heruistic(A):
+    return sum([abs(i - val) for i, val in enumerate(A) if val >= 0])
+
+def solve(A):        
+    q = PriorityQueue()
+    res = A[::-1]
+    res = tuple(res)
+    index = 0
+    q.put((heruistic(A), 0, index, [], A))
+    explored = set()
+    while q:
+        _, g, _, position, state = q.get()
+        tupState = tuple(state)
+        if tupState in explored:
+            continue
+        explored.add(tupState)
+        if state == res:
+            print(position)
+            return position
+        for move, newState in successors(state):
+            if newState not in explored:
+                index += 1
+                distance = g + 1
+                q.put((distance + heruistic(newState), distance, index, position + [move], newState))
 
 def solve_distinct_disks(length, n):
-    pass
+    init = [i if i < n else -1 for i in range(length) ]
+    return solve(init)
 
 ############################################################
 # Section 4: Feedback
 ############################################################
 
 # Just an approximation is fine.
-feedback_question_1 = 0
+feedback_question_1 = """ 8 hours to 10 hours"""
 
 feedback_question_2 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+should have know somthing about python PriorityQueue. Stuck there for 3 hours about object cant compare to object
 """
 
 feedback_question_3 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+I like 521. feels learnt a lot. A search is cool.
 """
