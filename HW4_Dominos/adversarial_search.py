@@ -80,10 +80,48 @@ class DominoesGame(object):
         legal_moves = list(self.legal_moves(vertical))
         return random.choice(legal_moves) if legal_moves else None
 
+    def utility(self, state, vertical):
+        return len(list(state.legal_moves(vertical))) - len(list(state.legal_moves(not vertical)))
+
+    def alphabeta_search(self, vertical, limit):
+        def max_value(state, alpha, beta, depth):
+            if depth == limit or not state.game_over(vertical):
+                return None, self.utility(state, vertical), 1
+            v = -math.inf
+            best_move = None
+            for move, successor in state.successors(vertical):
+                _, u, nodes = min_value(successor, alpha, beta, depth + 1)
+                if u > v:
+                    v = u
+                    best_move = move
+                if v >= beta:
+                    return best_move, v, nodes + 1
+                alpha = max(alpha, v)
+        
+        def min_value(state, alpha, beta, depth):
+            if depth == limit or not state.game_over(vertical):
+                return None, self.utility(state, vertical), 1
+            v = math.inf
+            best_move = None
+            for move, successor in state.successors(vertical):
+                _, u, nodes = max_value(successor, alpha, beta, depth + 1)
+                if u < v:
+                    v = u
+                    best_move = move
+                if v <= alpha:
+                    return best_move, v, nodes + 1
+                beta = min(beta, v)
+            return best_move, v, nodes + 1
+        
+
+        best_move, value, nodes = max_value(self, -math.inf, math.inf, limit)
+        return best_move, value, nodes
+
+
 
     # Required
     def get_best_move(self, vertical, limit):
-        pass
+        return self.alphabeta_search(vertical, limit)
 
 ############################################################
 # Section 2: Feedback
@@ -99,7 +137,13 @@ print(g.get_board() == g2.get_board())
 
 g.get_random_move(True)
 g.get_random_move(False) 
+
+b = [[False] * 3 for i in range(3)]
+g = DominoesGame(b)
+g.get_best_move(True, 1)
+
 feedback_question_1 = """
+
 Type your response here.
 Your response may span multiple lines.
 Do not include these instructions in your response.
