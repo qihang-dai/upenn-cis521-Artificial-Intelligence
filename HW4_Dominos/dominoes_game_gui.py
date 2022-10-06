@@ -1,7 +1,7 @@
 import sys
 import tkinter
 
-import adversarial_search
+import homework4 as adversarial_search
 
 class Square(tkinter.Canvas):
 
@@ -120,7 +120,7 @@ class DominoesGUI(tkinter.Frame):
 if __name__ == "__main__":
     root = tkinter.Tk()
     root.title("Dominoes Game")
-    rows, cols = sys.argv[1:]
+    rows, cols = 3, 3
     DominoesGUI(root, int(rows), int(cols)).pack()
     root.resizable(height=False, width=False)
     root.mainloop()

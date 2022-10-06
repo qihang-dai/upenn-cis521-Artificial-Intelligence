@@ -46,6 +46,7 @@ class DominoesGame(object):
         else:
             if col + 1 >= self.cols or self.board[row][col] or self.board[row][col + 1]:
                 return False
+        return True
 
 
     def legal_moves(self, vertical):
@@ -64,7 +65,7 @@ class DominoesGame(object):
         
 
     def game_over(self, vertical):
-        return any(self.legal_moves(vertical))
+        return not any(self.legal_moves(vertical))
 
     def copy(self):
         return DominoesGame(copy.deepcopy(self.board))
@@ -72,9 +73,9 @@ class DominoesGame(object):
 
     def successors(self, vertical):
         for row, col in self.legal_moves(vertical):
-            copy = self.copy()
-            copy.perform_move(row, col, vertical)
-            yield (row, col), copy
+            successor = self.copy()
+            successor.perform_move(row, col, vertical)
+            yield (row, col), successor
 
     def get_random_move(self, vertical):
         legal_moves = list(self.legal_moves(vertical))
@@ -85,36 +86,41 @@ class DominoesGame(object):
 
     def alphabeta_search(self, vertical, limit):
         def max_value(state, alpha, beta, depth):
-            if depth == limit or not state.game_over(vertical):
+            if depth == limit or state.game_over(vertical):
                 return None, self.utility(state, vertical), 1
             v = -math.inf
             best_move = None
+            nodes_visited = 0
             for move, successor in state.successors(vertical):
                 _, u, nodes = min_value(successor, alpha, beta, depth + 1)
+                nodes_visited += nodes
                 if u > v:
                     v = u
                     best_move = move
                 if v >= beta:
-                    return best_move, v, nodes + 1
+                    return best_move, v, nodes_visited
                 alpha = max(alpha, v)
+            return best_move, v, nodes_visited
         
         def min_value(state, alpha, beta, depth):
-            if depth == limit or not state.game_over(vertical):
+            if depth == limit or state.game_over(not vertical):
                 return None, self.utility(state, vertical), 1
             v = math.inf
             best_move = None
-            for move, successor in state.successors(vertical):
+            nodes_visited = 0
+            for move, successor in state.successors(not vertical):
                 _, u, nodes = max_value(successor, alpha, beta, depth + 1)
+                nodes_visited += nodes
                 if u < v:
                     v = u
                     best_move = move
                 if v <= alpha:
-                    return best_move, v, nodes + 1
+                    return best_move, v, nodes_visited
                 beta = min(beta, v)
-            return best_move, v, nodes + 1
+            return best_move, v, nodes_visited
         
 
-        best_move, value, nodes = max_value(self, -math.inf, math.inf, limit)
+        best_move, value, nodes = max_value(self, -math.inf, math.inf, 0)
         return best_move, value, nodes
 
 
@@ -126,37 +132,42 @@ class DominoesGame(object):
 ############################################################
 # Section 2: Feedback
 ############################################################
-g = create_dominoes_game(3, 4)
-g1 = g.copy()
-g.perform_move(-1, 0, True)
-print(g.get_board() == g1.get_board())
+# g = create_dominoes_game(3, 4)
+# g1 = g.copy()
+# g.perform_move(-1, 0, True)
+# print(g.get_board() == g1.get_board())
 
-g = create_dominoes_game(4, 4)
-g2 = g.copy()
-print(g.get_board() == g2.get_board())
+# g = create_dominoes_game(4, 4)
+# g2 = g.copy()
+# print(g.get_board() == g2.get_board())
 
-g.get_random_move(True)
-g.get_random_move(False) 
+# g.get_random_move(True)
+# g.get_random_move(False) 
 
-b = [[False] * 3 for i in range(3)]
-g = DominoesGame(b)
-g.get_best_move(True, 1)
+# b = [[False] * 3 for i in range(3)]
+# g = DominoesGame(b)
+# print(g.get_best_move(True, 2))
+# print(g.get_best_move(True, 1))
+# b = [[False] * 3 for i in range(3)]
+# g = DominoesGame(b)
+# g.perform_move(0, 1, True)
+# print(g.get_best_move(False, 1))
+# print(g.get_best_move(False, 2))
 
-feedback_question_1 = """
+# b = [[True, False], [True, False]]
+# g = DominoesGame(b)
+# print(g.is_legal_move(0, 0, False))
 
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
-"""
+# print(g.is_legal_move(0, 1, True))
+# #  True
+# print(g.is_legal_move(1, 1, True))
+#  False
+feedback_question_1 = """5 hour"""
 
 feedback_question_2 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+I think the homework is very good. It is very helpful for me to understand the alpha-beta pruning.
 """
 
 feedback_question_3 = """
-Type your response here.
-Your response may span multiple lines.
-Do not include these instructions in your response.
+i hope all those test case in the homework page can be combined to skeleton. Every time i copy paste it to test my functions
 """
