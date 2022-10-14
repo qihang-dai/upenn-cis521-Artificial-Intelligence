@@ -19,27 +19,20 @@ student_name = "Type your full name here."
 def sudoku_cells():
     return [(i,j) for i in range(9) for j in range(9)]
 
-def sudoku_arcs_helper():
-    #for every cell, check the row, column and the box
-    arcs, rowarcs, colarcs, boxarcs = set(), set(), set(), set()
+def sudoku_arcs():
+    arcs = []
     for i in range(9):
         for j in range(9):
             for k in range(9):
                 if i != k:
-                    arcs.add(((i,j),(k,j)))
-                    rowarcs.add(((i,j),(i,k)))
+                    arcs.append(((i,j),(k,j)))
                 if j != k:
-                    arcs.add(((i,j),(i,k)))
-                    colarcs.add(((i,j),(k,j)))
+                    arcs.append(((i,j),(i,k)))
             for k in range(3):
                 for l in range(3):
                     if i != i//3*3+k and j != j//3*3+l:
-                        arcs.add(((i,j),(i//3*3+k,j//3*3+l)))
-                        boxarcs.add(((i,j),(i//3*3+k,j//3*3+l)))
-    return list(arcs), list(rowarcs), list(colarcs), list(boxarcs)
-
-def sudoku_arcs():
-    return sudoku_arcs_helper()[0]
+                        arcs.append(((i,j),(i//3*3+k,j//3*3+l)))
+    return arcs
 
 def read_board(path):
     board = {}
@@ -53,8 +46,7 @@ def read_board(path):
 class Sudoku(object):
 
     CELLS = sudoku_cells()
-    ARCS, ROWARCS, COLARCS, BOXARCS = sudoku_arcs_helper()
-
+    ARCS = sudoku_arcs()
     def __init__(self, board):
         self.board = board
         
@@ -67,20 +59,15 @@ class Sudoku(object):
          we ensure all cell1 and cell2 should be in the same row, column or box and has preset single value
          and cell2 should have single value already
         '''
-        
+    
         #inconsistent
         #1. in arcs
         #2. cell2 has single value to help cell1 to remove inconsistent value
         #3. cell2 value is a contained in cell1 so cell1 can remove it
-        if  len(self.board[cell2]) > 1:
-            return False
-
-        if not self.board[cell2].issubset(self.board[cell1]):
-            return False
-
-        self.board[cell1] -= self.board[cell2]
-
-        return True
+        if (cell1, cell2) in self.ARCS and len(self.board[cell2]) == 1 and self.board[cell2].issubset(self.board[cell1]):
+            self.board[cell1] -= self.board[cell2]
+            return True
+        return False
 
 
     def infer_ac3(self):
@@ -89,31 +76,75 @@ class Sudoku(object):
         while queue:
             cell1, cell2 = queue.pop(0)
             if self.remove_inconsistent_values(cell1, cell2):
-                if len(self.board[cell1]) == 0:
-                    return False
                 for arc in self.ARCS:
                     if arc[1] == cell1 and arc[1] != cell2:
                         queue.append(arc)
 
              
     def infer_improved(self):
-        
-        
+        extra_infer = True
+        while extra_infer:
+            self.infer_ac3()
+            extra_infer = False
+            for cell in self.CELLS:
+                if len(self.board[cell]) > 1:
+                    for val in self.board[cell]:
+                        #check col (differnt row)
+                        row, col = cell
+                        
+                        col_unique = True
+                        for r in range(9):
+                            if r != row and val in self.board[(r,col)]:
+                                col_unique = False
+                                break
+                        if col_unique:
+                            self.board[cell] = {val}
+                            extra_infer = True
+                            break
+
+                        #check row (different col)
+                        row_unique = True
+                        for c in range(9):
+                            if c != col and val in self.board[(row,c)]:
+                                row_unique = False
+                                break
+                        if row_unique:
+                            self.board[cell] = {val}
+                            extra_infer = True
+                            break
+                        
+                        #check box
+                        box_unique = True
+                        for r in range(row//3*3, row//3*3+3):
+                            for c in range(col//3*3, col//3*3+3):
+                                if r != row and c != col and val in self.board[(r,c)]:
+                                    box_unique = False
+                                    break
+                        
+                        if box_unique:
+                            self.board[cell] = {val}
+                            extra_infer = True
+                            break
+
+    def is_solved(self):
+        for cell in self.CELLS:
+            if len(self.board[cell]) != 1:
+                return False
+        return True
 
     def infer_with_guessing(self):
-        pass
-        # self.infer_improved()
+        self.infer_improved()
 
-        # for cell in self.CELLS:
-        #     if len(self.board[cell]) > 1:
-        #         for val in self.board[cell]:
-        #             board_copy = self.board.deepcopy()
-        #             board_copy[cell] = {val}
-        #             sudoku_copy = Sudoku(board_copy)
-        #             sudoku_copy.infer_with_guessing()
-        #             if all(len(sudoku_copy.board[cell]) == 1 for cell in self.CELLS):
-        #                 self.board = sudoku_copy.board
-        #                 return 
+        for cell in self.CELLS:
+            if len(self.board[cell]) > 1:
+                for val in self.board[cell]:
+                    board_copy = self.board.deepcopy()
+                    self.board[cell] = {val}
+                    self.infer_with_guessing()
+                    if self.is_solved():
+                        return
+                    self.board = board_copy
+
         
                     
         
