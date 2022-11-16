@@ -142,8 +142,9 @@ class Sudoku(object):
                     self.board[cell] = {val}
                     self.infer_with_guessing()
                     if self.is_solved():
-                        return
+                        break
                     self.board = board_copy
+                return
 
         
                     
